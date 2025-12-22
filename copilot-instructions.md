@@ -23,3 +23,16 @@ Config & UI
 
 Testing tips
 - Add unit-style tests under `tests/` focusing on path handling and platform selection (avoid requiring a real GUI).
+
+Dev environment invariants (keep these maintained)
+- This plugin is developed against a local Picard source checkout at `f:/repos/picard`.
+- Import resolution MUST work during development (no suppressing missing-import errors for Picard).
+- The repository uses:
+  - `pyrightconfig.json` with `extraPaths: ["f:/repos/picard"]`.
+  - `.vscode/settings.json` with `python.analysis.extraPaths` pointing at `f:/repos/picard`.
+  - A local `.env` (ignored by git) setting `PYTHONPATH=f:/repos/picard`.
+
+Maintaining dev config
+- If Picard imports start failing, prefer fixing the dev environment (dependencies / PYTHONPATH) rather than muting diagnostics.
+- Keep `requirements-dev.txt` up to date with the minimum packages required for `import picard.plugin3.api` to succeed in the plugin venv.
+- When updating imports or Picard API usage, ensure Pylance/Pyright still resolves Picard types via the local checkout.

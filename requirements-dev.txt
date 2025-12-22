@@ -1,0 +1,19 @@
+# Dev requirements for working on this plugin *against a local Picard source tree*.
+#
+# Assumptions:
+# - Picard is checked out at f:/repos/picard
+# - The plugin repo uses a local venv (./.venv)
+# - PYTHONPATH includes f:/repos/picard (see .env)
+#
+# These packages are needed so that importing picard.plugin3.api works in the
+# plugin dev environment (Picard imports depend on Qt + a few runtime deps).
+
+PyQt6
+PyQt6-stubs
+mutagen
+python-dateutil
+PyYAML
+pywin32
+
+# Optional (tooling)
+# pylint

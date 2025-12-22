@@ -1,0 +1,14 @@
+[MASTER]
+ignore=__pycache__,.venv,.git
+
+[MESSAGES CONTROL]
+disable=
+  import-error,
+  broad-exception-caught,
+  too-few-public-methods,
+  missing-module-docstring,
+  missing-function-docstring,
+  missing-class-docstring
+
+[FORMAT]
+indent-string='    '

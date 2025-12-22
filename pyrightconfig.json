@@ -1,0 +1,11 @@
+{
+  "typeCheckingMode": "basic",
+  "extraPaths": [
+    "f:/repos/picard"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/.venv",
+    "**/.git"
+  ]
+}

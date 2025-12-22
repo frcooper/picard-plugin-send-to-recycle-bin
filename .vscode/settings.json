@@ -1,0 +1,7 @@
+{
+  "python.analysis.typeCheckingMode": "basic",
+  "python.envFile": "${workspaceFolder}/.env",
+  "python.analysis.extraPaths": [
+    "f:/repos/picard"
+  ]
+}
