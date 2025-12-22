@@ -1,8 +1,12 @@
 [MASTER]
 ignore=__pycache__,.venv,.git
+init-hook=import os,sys; default=r"f:/repos/picard"; extra=[p for p in os.environ.get("PYTHONPATH","").split(os.pathsep) if p]; sys.path[:0]=[p for p in ([default]+extra) if os.path.isdir(p) and p not in sys.path]
 
 [MESSAGES CONTROL]
 disable=
+  C,
+  R,
+  W,
   import-error,
   broad-exception-caught,
   too-few-public-methods,
