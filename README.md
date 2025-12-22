@@ -3,7 +3,7 @@
 Adds a Picard file action that sends the currently selected files to the OS recycle bin / trash (instead of permanently deleting them).
 
 - Plugin name: Recycle Bin
-- Plugin version: 0.1.3
+- Plugin version: 0.1.4
 - Picard plugin API: 3.0
 
 ## What it does
