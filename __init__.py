@@ -173,6 +173,10 @@ def _extract_file_paths(objs):
 
 
 class SendToRecycleBinAction(BaseAction):
+	# Picard v3 menu label is derived from BaseAction.display_title(), which
+	# prefers TITLE (falling back to NAME). BaseAction defines TITLE="Unknown",
+	# so plugins must override TITLE to avoid the default.
+	TITLE = "Send to Recycle Bin"
 	NAME = "Send to Recycle Bin"
 
 	def callback(self, objs):
