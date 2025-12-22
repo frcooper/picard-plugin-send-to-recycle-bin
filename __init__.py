@@ -7,16 +7,6 @@ Windows uses the native Shell API (allow-undo delete).
 macOS moves files into ~/.Trash.
 Linux / other Unix tries the freedesktop.org Trash spec.
 """
-
-PLUGIN_NAME = "Recycle Bin"
-PLUGIN_AUTHOR = "FRC + GitHub Copilot"
-PLUGIN_DESCRIPTION = "Adds an action to send selected files to the OS recycle bin/trash."
-PLUGIN_VERSION = "0.1.2"
-PLUGIN_API_VERSIONS = ["3.0"]
-PLUGIN_LICENSE = "GPL-3.0-or-later"
-PLUGIN_LICENSE_URL = "https://gnu.org/licenses/gpl.html"
-
-from picard import log
 from picard.plugin3.api import BaseAction, PluginApi
 
 import ctypes
@@ -211,10 +201,17 @@ class SendToRecycleBinAction(BaseAction):
 
 
 def enable(api: PluginApi) -> None:
+	"""Picard plugin v3 entrypoint."""
 	api.plugin_config.register_option(CONFIRM_TRASH_SETTING_KEY, True)
 	api.register_file_action(SendToRecycleBinAction)
-	api.logger.info("Recycle Bin: loaded v%s", PLUGIN_VERSION)
+	version = api.manifest.version
+	api.logger.info("Recycle Bin: enabled%s", f" v{version}" if version else "")
 
 
 def disable() -> None:
-	return None
+	"""Optional disable hook."""
+	try:
+		api = PluginApi.get_api()
+		api.logger.info("Recycle Bin: disabled")
+	except Exception:
+		pass
