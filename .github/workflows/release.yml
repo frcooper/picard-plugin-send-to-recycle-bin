@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine previous tag
+        id: prev
+        shell: bash
+        run: |
+          set -euo pipefail
+          current="${GITHUB_REF_NAME}"
+          prev=""
+
+          # Tags sorted by semver-like order (vX.Y.Z).
+          mapfile -t tags < <(git tag --list 'v*' --sort=-version:refname)
+
+          for t in "${tags[@]}"; do
+            if [[ "$t" != "$current" ]]; then
+              prev="$t"
+              break
+            fi
+          done
+
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "prev=$prev" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release with notes
+        uses: actions/github-script@v7
+        env:
+          CURRENT_TAG: ${{ steps.prev.outputs.current }}
+          PREV_TAG: ${{ steps.prev.outputs.prev }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const current = process.env.CURRENT_TAG;
+            const prev = process.env.PREV_TAG;
+
+            let body = '';
+
+            if (prev) {
+              const compare = await github.rest.repos.compareCommitsWithBasehead({
+                owner,
+                repo,
+                basehead: `${prev}...${current}`,
+              });
+
+              const commits = compare.data.commits || [];
+              body += `Changes since ${prev}:\n\n`;
+              if (commits.length === 0) {
+                body += '- (no commits found)\n';
+              } else {
+                for (const c of commits) {
+                  const sha = c.sha.substring(0, 7);
+                  const msg = (c.commit && c.commit.message ? c.commit.message : '').split('\n')[0];
+                  const author = c.commit && c.commit.author ? c.commit.author.name : 'unknown';
+                  body += `- ${msg} (${sha}) — ${author}\n`;
+                }
+              }
+            } else {
+              body += 'Initial release.\n';
+            }
+
+            await github.rest.repos.createRelease({
+              owner,
+              repo,
+              tag_name: current,
+              name: current,
+              body,
+              draft: false,
+              prerelease: false,
+              generate_release_notes: false,
+            });

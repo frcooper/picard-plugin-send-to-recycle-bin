@@ -36,3 +36,7 @@ Maintaining dev config
 - If Picard imports start failing, prefer fixing the dev environment (dependencies / PYTHONPATH) rather than muting diagnostics.
 - Keep `requirements-dev.txt` up to date with the minimum packages required for `import picard.plugin3.api` to succeed in the plugin venv.
 - When updating imports or Picard API usage, ensure Pylance/Pyright still resolves Picard types via the local checkout.
+
+Release/versioning rules
+- When asked whether changes warrant a point release, evaluate everything since the last git tag (e.g., `git log <tag>..HEAD` and `git diff --name-status <tag>..HEAD`), not just the latest commit.
+- Base the recommendation on user-facing behavior changes vs dev-only changes, and ensure `MANIFEST.toml` + `README.md` stay in sync when bumping versions.

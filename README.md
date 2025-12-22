@@ -40,3 +40,15 @@ By default, the plugin shows a confirmation dialog before trashing files. You ca
 ## License
 
 GPL-3.0-or-later. See the license reference in MANIFEST.toml.
+
+## Releasing
+
+This repository uses tags to publish releases. Creating a tag `vX.Y.Z` triggers a GitHub Action that creates a GitHub Release with notes listing all commits since the previous tag.
+
+To bump the version (updates MANIFEST.toml and this README), commit, tag, and push:
+
+- `python scripts/bump_version.py --bump patch`
+
+Or set an explicit version:
+
+- `python scripts/bump_version.py --new-version 0.1.4`
