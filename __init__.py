@@ -14,6 +14,7 @@ import os
 import shutil
 import sys
 import urllib.parse
+from collections.abc import Iterable
 
 from picard.plugin3.api import BaseAction, PluginApi
 
@@ -26,7 +27,11 @@ def _confirm_send_to_trash(api: PluginApi, parent, count: int) -> bool:
     if not api.plugin_config[CONFIRM_TRASH_SETTING_KEY]:
         return True
     try:
-        from PyQt6.QtWidgets import QCheckBox, QMessageBox
+        import importlib
+
+        qtwidgets = importlib.import_module("PyQt6.QtWidgets")
+        QCheckBox = qtwidgets.QCheckBox
+        QMessageBox = qtwidgets.QMessageBox
     except Exception:
         return True
 
@@ -76,13 +81,17 @@ def _trash_windows(paths):
 
     # Double-null terminated list of files
     from_buf = "\0".join(existing) + "\0\0"
-    op = _WinSHFILEOPSTRUCTW()
-    op.hwnd = None
-    op.wFunc = FO_DELETE
-    op.pFrom = from_buf
-    op.pTo = None
-    op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI
-    op.fAnyOperationsAborted = 0
+    flags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI
+    op = _WinSHFILEOPSTRUCTW(
+        None,
+        FO_DELETE,
+        from_buf,
+        None,
+        flags,
+        0,
+        None,
+        None,
+    )
 
     ret = ctypes.windll.shell32.SHFileOperationW(ctypes.byref(op))
     if ret != 0 or op.fAnyOperationsAborted:
@@ -198,7 +207,7 @@ def _extract_files_and_paths(objs):
             continue
         type_name = type(obj).__name__
 
-        def add_file_candidate(f, source: str):
+        def add_file_candidate(f):
             p = getattr(f, "filename", None)
             if not p:
                 return 0
@@ -223,8 +232,13 @@ def _extract_files_and_paths(objs):
                 except TypeError:
                     # Some implementations require optional args.
                     iterable = iterfiles(False)
+                if not isinstance(iterable, Iterable):
+                    debug_info.append(
+                        (type_name, "iterfiles", "not iterable")
+                    )
+                    continue
                 for f in iterable:
-                    count_added += add_file_candidate(f, "iterfiles")
+                    count_added += add_file_candidate(f)
                 debug_info.append((type_name, "iterfiles", f"added {count_added} path(s)"))
                 continue
             except Exception as e:
@@ -235,7 +249,7 @@ def _extract_files_and_paths(objs):
 
         # Direct file object.
         if getattr(obj, "filename", None):
-            count_added = add_file_candidate(obj, "filename")
+            count_added = add_file_candidate(obj)
             debug_info.append((type_name, "filename", f"added {count_added} path(s)"))
             continue
 
@@ -245,7 +259,7 @@ def _extract_files_and_paths(objs):
             try:
                 count_added = 0
                 for f in linked:
-                    count_added += add_file_candidate(f, "files")
+                    count_added += add_file_candidate(f)
                 debug_info.append((type_name, "files", f"added {count_added} path(s)"))
                 continue
             except Exception as e:
@@ -254,7 +268,7 @@ def _extract_files_and_paths(objs):
         # Some wrappers might hold a single File in `file`.
         wrapped = getattr(obj, "file", None)
         if wrapped is not None and getattr(wrapped, "filename", None):
-            count_added = add_file_candidate(wrapped, "file")
+            count_added = add_file_candidate(wrapped)
             debug_info.append((type_name, "file", f"added {count_added} path(s)"))
             continue
 
@@ -316,9 +330,11 @@ class SendToRecycleBinAction(BaseAction):
                 sorted(ok_set),
             )
         elif files_to_remove:
-            if hasattr(self.tagger, "remove_files"):
+            tagger = getattr(self, "tagger", None)
+            remove_files = getattr(tagger, "remove_files", None)
+            if callable(remove_files):
                 try:
-                    self.tagger.remove_files(files_to_remove)
+                    remove_files(files_to_remove)
                     self.api.logger.debug(
                         "Recycle Bin: removed %d file(s) from UI", len(files_to_remove)
                     )
