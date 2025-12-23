@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD025 MD032 -->
+
 # Agent instructions (canonical)
 
 This repository keeps agent instructions in this file.
