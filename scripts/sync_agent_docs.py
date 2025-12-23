@@ -18,15 +18,17 @@ Also enforces: README.md must not be older than AGENTS.md (by git commit time).
 from __future__ import annotations
 
 import argparse
-import os
+import hashlib
 import pathlib
-import subprocess
 import sys
 from dataclasses import dataclass
 
 
 BEGIN_MARKER = "<!-- BEGIN AGENT INSTRUCTIONS -->"
 END_MARKER = "<!-- END AGENT INSTRUCTIONS -->"
+
+README_STAMP_PREFIX = "<!-- sync_agent_docs: AGENTS_SHA256="
+README_STAMP_SUFFIX = " -->"
 
 
 @dataclass(frozen=True)
@@ -55,8 +57,12 @@ def _write_text(path: pathlib.Path, content: str) -> None:
     path.write_text(content, encoding="utf-8", newline="\n")
 
 
+def _normalize_newlines(text: str) -> str:
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def _extract_instructions(agents_text: str) -> str:
-    agents_text = agents_text.replace("\r\n", "\n").replace("\r", "\n")
+    agents_text = _normalize_newlines(agents_text)
     begin = agents_text.find(BEGIN_MARKER)
     end = agents_text.find(END_MARKER)
     if begin == -1 or end == -1 or end <= begin:
@@ -69,55 +75,47 @@ def _extract_instructions(agents_text: str) -> str:
     return content
 
 
-def _run_git(args: list[str], cwd: pathlib.Path) -> str:
-    completed = subprocess.run(
-        ["git", *args],
-        cwd=str(cwd),
-        check=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-    if completed.returncode != 0:
-        return ""
-    return completed.stdout.strip()
+def _agents_sha256(agents_text: str) -> str:
+    normalized = _normalize_newlines(agents_text)
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
-def _git_commit_time_unix(path: pathlib.Path, repo_root: pathlib.Path) -> int | None:
-    rel = os.fspath(path.relative_to(repo_root)).replace("\\", "/")
-    out = _run_git(["log", "-1", "--format=%ct", "--", rel], cwd=repo_root)
-    if not out:
-        return None
-    try:
-        return int(out)
-    except ValueError:
-        return None
+def _readme_stamp_line(sha256_hex: str) -> str:
+    return f"{README_STAMP_PREFIX}{sha256_hex}{README_STAMP_SUFFIX}"
 
 
-def _check_readme_freshness(repo_root: pathlib.Path) -> list[str]:
-    agents = repo_root / "AGENTS.md"
-    readme = repo_root / "README.md"
-
-    if not agents.exists() or not readme.exists():
+def _sync_readme_stamp(repo_root: pathlib.Path, agents_sha: str, write: bool) -> list[str]:
+    readme_path = repo_root / "README.md"
+    if not readme_path.exists():
         return []
 
-    if not (repo_root / ".git").exists():
-        # In non-git contexts, skip (CI should have .git).
+    readme = _normalize_newlines(_read_text(readme_path))
+    expected_line = _readme_stamp_line(agents_sha)
+
+    # Replace existing stamp if present.
+    start = readme.find(README_STAMP_PREFIX)
+    if start != -1:
+        end = readme.find(README_STAMP_SUFFIX, start)
+        if end != -1:
+            end += len(README_STAMP_SUFFIX)
+            current_line = readme[start:end]
+            if current_line == expected_line:
+                return []
+            if write:
+                new_readme = readme[:start] + expected_line + readme[end:]
+                _write_text(readme_path, new_readme)
+                return []
+            return ["README.md does not match AGENTS.md (sync stamp mismatch)."]
+
+    # No stamp: append one at end.
+    if write:
+        suffix = "" if readme.endswith("\n") else "\n"
+        _write_text(readme_path, readme + suffix + expected_line + "\n")
         return []
-
-    agents_ct = _git_commit_time_unix(agents, repo_root)
-    readme_ct = _git_commit_time_unix(readme, repo_root)
-
-    if agents_ct is None or readme_ct is None:
-        return []
-
-    if readme_ct < agents_ct:
-        return [
-            "README.md is older than AGENTS.md (by last git commit time). "
-            "Update README.md or amend commits so it is at least as new as AGENTS.md."
-        ]
-
-    return []
+    return [
+        "README.md is missing sync stamp for AGENTS.md. "
+        "Run `python scripts/sync_agent_docs.py --write` and commit the result."
+    ]
 
 
 def _check_or_write(repo_root: pathlib.Path, write: bool) -> int:
@@ -146,7 +144,8 @@ def _check_or_write(repo_root: pathlib.Path, write: bool) -> int:
             if current != instructions:
                 errors.append(f"Generated file out of date: {target.relpath}")
 
-    errors.extend(_check_readme_freshness(repo_root))
+    agents_sha = _agents_sha256(agents_text)
+    errors.extend(_sync_readme_stamp(repo_root, agents_sha=agents_sha, write=write))
 
     if errors:
         for msg in errors:
