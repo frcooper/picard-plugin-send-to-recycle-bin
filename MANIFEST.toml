@@ -1,7 +1,7 @@
 uuid = "d06b2eda-9006-44f8-a062-6e17f6fbf1d0"
 name = "Recycle Bin"
 authors = ["FRC + GitHub Copilot"]
-version = "0.1.4"
+version = "0.1.5"
 description = "Adds an action to send selected files to the OS recycle bin/trash."
 api = ["3.0"]
 license = "GPL-3.0-or-later"

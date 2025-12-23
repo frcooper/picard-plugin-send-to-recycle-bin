@@ -3,7 +3,7 @@
 Adds a Picard file action that sends the currently selected files to the OS recycle bin / trash (instead of permanently deleting them).
 
 - Plugin name: Recycle Bin
-- Plugin version: 0.1.4
+- Plugin version: 0.1.5
 - Picard plugin API: 3.0
 
 ## What it does
@@ -52,6 +52,7 @@ To bump the version (updates MANIFEST.toml and this README), commit, tag, and pu
 Or set an explicit version:
 
 - `python scripts/bump_version.py --new-version 0.1.4`
+- `python scripts/bump_version.py --new-version 0.1.5`
 
 ## Developer notes
 
