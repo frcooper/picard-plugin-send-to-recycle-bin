@@ -1,5 +1,6 @@
 {
   "python.analysis.typeCheckingMode": "basic",
+  "python.defaultInterpreterPath": "${workspaceFolder}/../picard/.venv/Scripts/python.exe",
   "python.envFile": "${workspaceFolder}/.env",
   "python.analysis.extraPaths": [
     "f:/repos/picard"

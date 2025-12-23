@@ -26,6 +26,7 @@ Testing tips
 
 Dev environment invariants (keep these maintained)
 - This plugin is developed against a local Picard source checkout at `f:/repos/picard`.
+- Use the same Python environment as Picard (the `.venv` inside the Picard repo).
 - Import resolution MUST work during development (no suppressing missing-import errors for Picard).
 - The repository uses:
   - `pyrightconfig.json` with `extraPaths: ["f:/repos/picard"]`.
@@ -34,7 +35,7 @@ Dev environment invariants (keep these maintained)
 
 Maintaining dev config
 - If Picard imports start failing, prefer fixing the dev environment (dependencies / PYTHONPATH) rather than muting diagnostics.
-- Keep `requirements-dev.txt` up to date with the minimum packages required for `import picard.plugin3.api` to succeed in the plugin venv.
+- Keep `requirements-dev.txt` up to date with the minimum packages required for `import picard.plugin3.api` to succeed in the Picard venv.
 - When updating imports or Picard API usage, ensure Pylance/Pyright still resolves Picard types via the local checkout.
 
 Release/versioning rules

@@ -2,11 +2,11 @@
 #
 # Assumptions:
 # - Picard is checked out at f:/repos/picard
-# - The plugin repo uses a local venv (./.venv)
+# - Development uses Picard's venv (../picard/.venv)
 # - PYTHONPATH includes f:/repos/picard (see .env)
 #
 # These packages are needed so that importing picard.plugin3.api works in the
-# plugin dev environment (Picard imports depend on Qt + a few runtime deps).
+# Picard dev environment (Picard imports depend on Qt + a few runtime deps).
 
 PyQt6
 PyQt6-stubs
