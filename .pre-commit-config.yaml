@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: sync-agent-docs
+        name: Sync agent docs from AGENTS.md
+        entry: python scripts/sync_agent_docs.py --write
+        language: python
+        pass_filenames: false

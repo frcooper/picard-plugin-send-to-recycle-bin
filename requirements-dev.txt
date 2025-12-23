@@ -17,3 +17,5 @@ pywin32
 
 # Optional (tooling)
 # pylint
+
+pre-commit

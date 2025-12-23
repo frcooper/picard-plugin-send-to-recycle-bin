@@ -52,3 +52,9 @@ To bump the version (updates MANIFEST.toml and this README), commit, tag, and pu
 Or set an explicit version:
 
 - `python scripts/bump_version.py --new-version 0.1.4`
+
+## Developer notes
+
+- `AGENTS.md` is the canonical source for agent instructions.
+- Generated files: `.github/copilot-instructions.md`, `GEMINI.md`, `.gemini/styleguide.md`.
+- Regenerate: `python scripts/sync_agent_docs.py --write`.
